@@ -1,0 +1,11 @@
+# secrets
+.env
+.env.*
+*.key
+# local tooling / caches
+.claude/
+.vscode/
+__pycache__/
+*.pyc
+*.exe
+*.o
