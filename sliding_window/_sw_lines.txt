@@ -1,0 +1,367 @@
+ SLIDING WINDOW Complete DSA Reference Guide — Hinglish Edition Mover · Reactor · Template · 14 Problems · Dry Runs · Patterns Brute Force → Optimal | C++ Implementations | Edge Cases | Problem Connections 
+Part 1 — Framework Sliding window problems mein do pointers hote hain jo array ya string pe move karte hain.
+Ek pointer consistently aage badhta hai — isko mover kehte hain.
+Doosra react karta hai window ki validity maintain karne ke liye — isko reactor kehte hain.
+Yeh distinction samajh aa jaaye toh koi bhi template yaad karne ki zarurat nahi — teen sawaalon se khud ban jaata hai.
+1.1 Sliding Window vs Two Pointer — Fark Kya Hai? Pehle yeh decide karo ki problem two-pointer hai ya sliding window.
+Dono mein do pointers hote hain lekin movement bilkul alag hai.
+
+▌ Sliding Window Dono pointers same direction mein chalte hain (left se right).
+Window = [tail..head] ek contiguous subarray/substring track karta hai.
+Koi bhi element window mein enter hota hai right se, exit karta hai left se.
+Sliding Window: tail ──────────────► head [ window ] tail aur head dono left se right Examples: LC 3, LC 76, LC 438, LC 30 
+▌ Two Pointer Do pointers opposite ends se ya independent positions se kaam karte hain.
+Contiguous subarray track nahi hota — dono independently move karte hain logic ke hisaab se.
+Two Pointer (opposite ends): left ──► ◄── right [sorted array mein pair dhundh rahe] Two Pointer (fast/slow): slow ──► fast ──────────────► [linked list cycle, remove duplicates] Examples: LC 167 Two Sum II, LC 11 Container Water, LC 15 3Sum, Floyd cycle detection 
+▌ Ek Sawaal Se Decide Karo Signal Use Contiguous subarray/window track kar rahe ho Sliding Window Sorted array mein pair/triplet dhundh rahe ho Two Pointer (opposite ends) Linked list mein cycle/midpoint dhundh rahe ho Two Pointer (fast/slow) Window ka left/right boundary maintain karna hai Sliding Window Dono pointers independently move karte hain Two Pointer 1.2 Pattern Recognition — Keywords Se Template Identify Karo Problem statement padh ke yeh keywords dhundho.
+Yeh directly template decide karte hain.
+Problem Statement Mein Likha Hai Matlab Template &quot;longest substring/subarray...&quot; Maximum window dhundho Valid pe react, check→react &quot;shortest window containing all...&quot; Minimum valid window Valid pe react, check→react (while) &quot;all starting indices of anagram/permutation&quot; Fixed size window scan Scheduled, if shrink &quot;exactly k distinct/different&quot; atMost(k) - atMost(k-1) trick Invalid pe react, while shrink &quot;at most k...&quot; Direct sliding window Invalid pe react, while shrink &quot;subarrays with score/condition &lt; k&quot; Count valid windows Invalid pe react, while shrink &quot;concatenation of all words&quot; Word-level, head driven Head mover, while shrink &quot;replace at most k characters&quot; Window with budget k Invalid pe react, if shrink &quot;maximum of each window of size k&quot; Fixed window running max Scheduled, deque &quot;minimum operations to make continuous&quot; Sort + window Valid pe react, if shrink Aur bhi signals jo template hint dete hain: &quot;all words same length&quot; → word chunking → head mover likely &quot;distinct elements&quot; → freq map + map.size() check &quot;frequency/count of X&quot; → need/have map pattern &quot;return count of subarrays&quot; → ans += head - tail + 1 trick &quot;consecutive&quot; → contiguous subarray → sliding window 1.3 Teen Sawaal — Template Derive Karne Ka Tarika Koi bhi sliding window problem aa jaaye — yeh teen sawaal answer karo.
+Template khud ban jaata hai.
+
+▌ Sawaal 1 — Mover Kaun Hai? Mover outer loop drive karta hai.
+Woh consistently aage badhta hai.
+Tail = mover — jab har position ek valid start point hai (char-by-char problems) Head = mover — jab sirf kuch positions meaningful hain (chunked problems) Head mover ki pehchaan — teen signals: Elements chunked hain (words of same length, not individual chars) Duplicate elements possible hain → overuse → tail multiple steps react karta hai Invalid element pe full reset hota hai → tail bada jump karta hai 
+▌ Sawaal 2 — Reactor Kab React Karta Hai? Window valid hone pe react → EXPAND → CHECK → REACT Window invalid hone pe react → EXPAND → REACT → CHECK Fixed size → Scheduled → tail hamesha ek step, order matter nahi Valid pe react kyun check pehle hota hai: window valid hai abhi — record karo, phir tod do.
+Invalid pe react kyun react pehle hota hai: window toot gayi — pehle fix karo, phir record karo.
+
+▌ Sawaal 3 — Reactor Kitna React Karta Hai? if — 1 step se window fix ho jaati hai (fixed size ya simple invalidity) while — unknown steps chahiye (variable size, overuse/duplicate case) Rule: fixed size window → hamesha if.
+Variable size window + invalid category → almost always while.
+1.4 Master Template — Har Line Ki Wajah Yeh canonical template hai.
+Har line kyun likhi hai — explain karte hain.
+int tail = 0, head = -1; // LINE A while (tail &lt; n) { // LINE B while (expansion_condition) { // LINE C head++; // LINE D ds.add(s[head]); // LINE E } check_and_record(); // LINE F if (tail &lt; head) { // LINE G ds.remove(s[tail]); // LINE H tail++; // LINE I } else { // LINE J tail++; // LINE K head = tail - 1; // LINE L } } LINE A — tail=0, head=-1 kyun? head=-1 isliye kyunki pehla kaam inner while mein head++ hai.
+head++ se head=0 hoga — toh pehla element s[0] add hoga.
+Agar head=0 rakhte toh pehle element ko twice process karte ya phir head++ se skip karte.
+head=-1 ek clean starting state hai — &quot;abhi koi element window mein nahi hai.&quot; LINE B — while(tail &lt; n) kyun? Tail last valid position tak ja sakta hai.
+Jab tail = n-1, ek aur iteration possible hai.
+Jab tail = n, koi window nahi bach sakti — loop band.
+Note: kuch problems mein while(tail &lt;= n-k) likhte hain — kyunki agar tail itna aage ho ki k elements bhi nahi bach rahe toh koi valid window possible nahi.
+Yeh optimization hai, correctness ke liye zaruri nahi.
+LINE C — expansion condition kyun inner while mein? Inner while tab tak chalti hai jab tak head condition satisfy kare.
+Condition problem-specific hai: Fixed size: head - tail + 1 &lt; k → &quot;abhi k elements nahi hue&quot; Valid pe ruko: !seen.count(s[head+1]) → &quot;next char duplicate nahi hai&quot; Invalid pe ruko: formed &lt; required → &quot;window abhi valid nahi&quot; LINE D, E — head++ phir ds.add(s[head]) kyun yeh order? Yahi ADD symmetry hai.
+Pehle position advance karo, phir us position ka element DS mein daalo.
+Agar ulta karo — ds.add(s[head]) phir head++ — toh purana head ka element add hoga jo already window mein tha.
+Off-by-one bug.
+SAHI: head++; ds.add(s[head]); // naya element head pe add GALAT: ds.add(s[head]); head++; // purana element add, off by 1 LINE G — if(tail &lt; head) kyun check? Agar tail == head, window mein sirf ek element hai.
+Us element ko hatana matlab window empty ho jaayegi aur head &lt; tail ho jaayega — invalid state.
+Isliye else branch mein head ko reset karte hain.
+LINE H, I — ds.remove(s[tail]) phir tail++ kyun yeh order? Yahi REMOVE symmetry hai — ADD ka exact mirror.
+Pehle current tail ki value DS se hatao (jab tail abhi valid index hai), phir tail advance karo.
+Agar ulta karo — tail++ phir ds.remove(s[tail]) — wrong element hata doge.
+SAHI: ds.remove(s[tail]); tail++; // current tail hata, phir advance GALAT: tail++; ds.remove(s[tail]); // next position ka element hata — wrong LINE L — head = tail - 1 kyun? Jab window single element thi (tail==head) aur hum tail badha rahe hain, head ko bhi aage laana padega.
+Lekin hum head = tail nahi likhte — kyunki next iteration ki shuruat mein inner while ka pehla kaam head++ hai.
+Agar head = tail set karein toh head++ se head = tail+1 ho jaayega — ek element skip.
+Isliye head = tail-1 set karo taaki head++ ke baad head = tail ho.
+1.5 Poora Template — Teeno Variants 
+▌ Variant A — Valid pe react (longest dhundh rahe) int tail = 0, head = -1; while (tail &lt; n) { while (head+1 &lt; n &amp;&amp; !willBreak(s[head+1])) { // expand jab valid head++; ds.add(s[head]); } CHECK: best = max(best, head - tail + 1); // check pehle if (tail &lt; head) { ds.remove(s[tail]); tail++; } else { tail++; head = tail - 1; } } 
+▌ Variant B — Invalid pe react, if shrink int tail = 0, head = -1; while (tail &lt; n) { head++; // expand 1 step hamesha ds.add(s[head]); if (isInvalid()) { // react pehle ds.remove(s[tail]); tail++; } CHECK: record answer; // check baad mein } 
+▌ Variant C — Invalid pe react, while shrink int tail = 0, head = -1; while (tail &lt; n) { head++; // expand 1 step ds.add(s[head]); while (isInvalid()) { // react while loop ds.remove(s[tail]); tail++; } CHECK: record answer; } 
+▌ Critical Symmetry — Hamesha Yaad Rakho ADD: head++; ds.add(s[head]) // position PEHLE, DS BAAD REMOVE: ds.remove(s[tail]); tail++; // DS PEHLE, position BAAD 1.6 Decision Table — Saare 14 Problems Problem Mover React Kab React Kitna DS LC 76 Min Window Substring tail valid → check→react while freq map LC 3 Longest No Repeat tail valid → check→react if set LC 438 All Anagrams tail scheduled if freq map LC 567 Permutation in String tail scheduled if freq map LC 239 Window Maximum tail scheduled if monotonic deque LC 992 K Different Integers tail invalid → react→check while freq map LC 1004 Max Ones III tail invalid → react→check if zero counter LC 424 Char Replacement tail invalid → react→check if freq map LC 30 Word Concat head invalid → react→check while word freq map LC 2009 Min Operations tail valid → check→react if sorted array LC 1425 Constrained Sum tail scheduled if deque + dp array LC 2444 Fixed Bounds head invalid → react→check if 3 boundary ptrs LC 2302 Score &lt; K tail invalid → react→check while running sum LC 2461 Distinct Sum K tail scheduled if freq map + sum 
+Part 2 — Problems Har problem ka structure: Problem → Brute Force → Observation → DS → Teen Sawaal → Pseudocode → Dry Run → Code → Edge Cases → Pattern &amp; Crux → Problem Connection Problem 1 · LC 76 — Minimum Window Substring [Hard] 
+▌ Problem Statement Do strings s aur t diye hain.
+s mein woh sabse chhota window dhundho jo t ke saare characters contain kare (correct frequency ke saath).
+Agar koi nahi toh empty string return karo.
+Input: s = &quot;ADOBECODEBANC&quot;, t = &quot;ABC&quot; Output: &quot;BANC&quot; 
+▌ Brute Force — O(n²) ya O(n³) Sabse simple approach: har possible window try karo aur check karo ki t ke saare chars hain ya nahi.
+// Brute Force O(n² * m) — TLE on large inputs for (int i = 0; i &lt; n; i++) { for (int j = i; j &lt; n; j++) { string window = s.substr(i, j-i+1); if (containsAll(window, t)) // O(m) check best = min(best, window); } } // Problem: har window ke liye fresh check // Prev window ka koi kaam nahi aata — sab waste Brute force kyun slow hai: jab i=0,j=5 se i=0,j=6 karte hain, toh sirf ek element badla.
+Lekin hum poori window dobara check karte hain.
+Yeh wasted work sliding window eliminate karta hai.
+
+▌ Observation — Sliding Window Kyun? Key insight: window grow karne se woh valid hone ki taraf jaati hai.
+Ek baar valid ho gayi — shrink karo minimum dhundne ke liye.
+Har step mein sirf ek element add ya remove hota hai — DS incrementally update hoti hai, fresh check nahi chahiye.
+
+▌ DS Identification need map — t mein har char ki required frequency have map — current window mein har char ki actual frequency formed — abhi kitne unique chars satisfy ho rahe hain (have[c] &gt;= need[c]) required — need.size() — total unique chars jo satisfy karne hain 
+▌ Teen Sawaal 1.
+Mover? tail — har position valid start candidate hai 2.
+React kab? Window valid hone pe (formed==required) → CHECK phir REACT 3.
+React kitna? while — valid window mein kai steps shrink ho sakti hai aur valid rahe 
+▌ Pseudocode while tail &lt; n: EXPAND: head++, have[s[head]]++ agar have[c] == need[c]: formed++ while formed == required: ← valid! check pehle CHECK: agar head-tail+1 &lt; best: record karo REACT: have[s[tail]]--, agar have[c] &lt; need[c]: formed-- tail++ 
+▌ Dry Run — Step by Step s = &quot;ADOBECODEBANC&quot;, t = &quot;ABC&quot; → need={A:1,B:1,C:1}, required=3 tail=0, head=-1, formed=0, have={} EXPAND: head=0 &quot;A&quot; → have={A:1}, A satisfy → formed=1 EXPAND: head=1 &quot;D&quot; → have={A:1,D:1}, D not in need → formed=1 EXPAND: head=2 &quot;O&quot; → have={A:1,D:1,O:1} → formed=1 EXPAND: head=3 &quot;B&quot; → have={..B:1}, B satisfy → formed=2 EXPAND: head=4 &quot;E&quot; → formed=2 EXPAND: head=5 &quot;C&quot; → have={..C:1}, C satisfy → formed=3 ✓ formed==3 → VALID WINDOW [0..5] = &quot;ADOBEC&quot; len=6 → bestLen=6, bestStart=0 SHRINK: remove s[0]=&quot;A&quot; → have[A]=0 &lt; need[A]=1 → formed=2, tail=1 formed!=3 → shrink band EXPAND: head=6 &quot;O&quot; → formed=2 EXPAND: head=7 &quot;D&quot; → formed=2 EXPAND: head=8 &quot;E&quot; → formed=2 EXPAND: head=9 &quot;B&quot; → have[B]=2 &gt; need[B]=1 → formed stays 2 EXPAND: head=10 &quot;A&quot; → have[A]=1 == need[A] → formed=3 ✓ VALID [1..10]=&quot;DOBECODEBA&quot; len=10 &gt; bestLen=6 → no update SHRINK: remove s[1]=&quot;D&quot; → not in need → tail=2 VALID [2..10]=&quot;OBECODEBA&quot; len=9 → no update SHRINK: remove s[2]=&quot;O&quot; → not in need → tail=3 VALID [3..10]=&quot;BECODEBA&quot; len=8 → no update SHRINK: remove s[3]=&quot;B&quot; → have[B]=2→1, still &gt;= need[B]=1 → formed stays 3 tail=4 VALID [4..10]=&quot;ECODEBA&quot; len=7 → no update SHRINK: remove s[4]=&quot;E&quot; → not in need → tail=5 VALID [5..10]=&quot;CODEBA&quot; len=6 → tie, no update SHRINK: remove s[5]=&quot;C&quot; → have[C]=0 &lt; 1 → formed=2, tail=6 EXPAND: head=11 &quot;N&quot; → not in need EXPAND: head=12 &quot;C&quot; → have[C]=1 → formed=3 ✓ VALID [6..12]=&quot;ODEBANC&quot; len=7 → no update SHRINK: remove s[6]=&quot;O&quot; → tail=7 VALID [7..12]=&quot;DEBANC&quot; len=6 → tie SHRINK: remove s[7]=&quot;D&quot; → tail=8 VALID [8..12]=&quot;EBANC&quot; len=5 &lt; 6 → bestLen=5, bestStart=8 ✓ SHRINK: remove s[8]=&quot;E&quot; → tail=9 VALID [9..12]=&quot;BANC&quot; len=4 &lt; 5 → bestLen=4, bestStart=9 ✓ SHRINK: remove s[9]=&quot;B&quot; → formed=2, tail=10 Final: s.substr(9,4) = &quot;BANC&quot; 
+▌ C++ Code string minWindow(string s, string t) { unordered_map&lt;char,int&gt; need, have; for (char c : t) need[c]++; int required = need.size(), formed = 0; int tail = 0, head = -1, bestLen = INT_MAX, bestStart = -1; int n = s.size(); while (tail &lt; n) { if (head + 1 &lt; n) { head++; have[s[head]]++; if (need.count(s[head]) &amp;&amp; have[s[head]] == need[s[head]]) formed++; } else break; while (formed == required) { if (head - tail + 1 &lt; bestLen) { bestLen = head-tail+1; bestStart = tail; } if (need.count(s[tail]) &amp;&amp; have[s[tail]] == need[s[tail]]) formed--; have[s[tail]]--; tail++; } } return bestStart == -1 ? &quot;&quot; : s.substr(bestStart, bestLen); } 
+▌ Complexity Time: O(|s| + |t|) — har element at most do baar process hota hai (once expand, once shrink) Space: O(|t|) — need aur have map mein at most |t| unique chars 
+▌ Edge Cases t.length &gt; s.length → return &quot;&quot; directly t = &quot;&quot; → return &quot;&quot; (ya problem constraints se t non-empty hai) No valid window → bestStart == -1 → return &quot;&quot; s == t → return s (exact match) Duplicate chars in t: need[&quot;A&quot;]=2, have[&quot;A&quot;]=1 → formed nahi badhega jab tak 2 nahi aate 
+▌ Pattern &amp; Crux &quot;Shortest window containing all X&quot; = yeh exact template.
+While loop shrink essential hai — ek char add karne ke baad window multiple steps valid reh sakti hai (extra chars the).
+Check andar shrink loop ke kyunki remove karne ke baad invalid ho sakti hai.
+
+▌ Problem Connection LC 438 — same need/have/formed pattern, fixed size instead of minimum LC 567 — LC 438 ka early exit variant LC 992 — same &quot;contains all&quot; idea lekin count karna hai, freq map same Problem 2 · LC 3 — Longest Substring Without Repeating Characters [Medium] 
+▌ Problem Statement String s diya hai.
+Longest substring ka length return karo jisme koi bhi character repeat na ho.
+Input: s = &quot;abcabcbb&quot; Output: 3 (substring &quot;abc&quot;) 
+▌ Brute Force — O(n²) for (int i = 0; i &lt; n; i++) { set&lt;char&gt; seen; for (int j = i; j &lt; n; j++) { if (seen.count(s[j])) break; // duplicate mila seen.insert(s[j]); best = max(best, j - i + 1); } } // O(n²) — i ke har value ke liye fresh start Waste: i=1 se shuru karte hain — i=0 ka kaam throw away.
+Sliding window: tail ek step badha, head wahan se continue kare jahan tha.
+
+▌ Teen Sawaal 1.
+Mover? tail — har position valid start hai 2.
+React kab? Valid hone pe — jab tak unique chars hain expand karo, phir CHECK → REACT 3.
+React kitna? if — ek char hatana kaafi hai next iteration ke liye 
+▌ Dry Run s = &quot;abcabcbb&quot; tail=0, head=-1, seen={}, best=0 EXPAND: s[0]=&quot;a&quot; unique → seen={a}, head=0 EXPAND: s[1]=&quot;b&quot; unique → seen={a,b}, head=1 EXPAND: s[2]=&quot;c&quot; unique → seen={a,b,c}, head=2 EXPAND: s[3]=&quot;a&quot; — seen mein hai! → STOP CHECK: best=max(0, 2-0+1)=3 ✓ SHRINK: remove s[0]=&quot;a&quot; → seen={b,c}, tail=1 EXPAND: s[3]=&quot;a&quot; unique → seen={b,c,a}, head=3 EXPAND: s[4]=&quot;b&quot; — seen mein hai! → STOP CHECK: best=max(3, 3-1+1)=3 SHRINK: remove s[1]=&quot;b&quot; → seen={c,a}, tail=2 EXPAND: s[4]=&quot;b&quot; unique → seen={c,a,b}, head=4 EXPAND: s[5]=&quot;c&quot; — seen mein hai! → STOP CHECK: best=max(3, 4-2+1)=3 SHRINK: remove s[2]=&quot;c&quot; → seen={a,b}, tail=3 ...
+(similar steps) Final answer: 3 
+▌ C++ Code int lengthOfLongestSubstring(string s) { unordered_set&lt;char&gt; seen; int tail = 0, head = -1, best = 0, n = s.size(); while (tail &lt; n) { while (head + 1 &lt; n &amp;&amp; !seen.count(s[head + 1])) { head++; seen.insert(s[head]); } best = max(best, head - tail + 1); if (tail &lt; head) { seen.erase(s[tail]); tail++; } else { tail++; head = tail - 1; } } return best; } 
+▌ Complexity Time: O(n) — har element at most twice touch hota hai Space: O(min(n, charset)) — set mein at most charset size elements 
+▌ Edge Cases All same chars &quot;aaaa&quot; → answer 1 All unique &quot;abcd&quot; → answer n Empty string → answer 0 Single char → answer 1 
+▌ Pattern &amp; Crux &quot;Longest without property X&quot; = valid pe react pattern.
+Head stops before introducing invalidity — window always valid at check time.
+One-step shrink kyunki ek char remove karne se woh duplicate out ho jaata hai.
+
+▌ Problem Connection LC 424 — same &quot;longest&quot; pattern, lekin invalidity condition alag (replacements &gt; k) LC 1004 — same pattern, zeros count track karte hain instead of seen set Problem 3 · LC 438 — Find All Anagrams in a String [Medium] 
+▌ Problem Statement Strings s aur p diye hain.
+s mein p ke saare anagrams ke starting indices return karo.
+Input: s = &quot;cbaebabacd&quot;, p = &quot;abc&quot; Output: [0, 6] 
+▌ Brute Force — O(n·k·log k) sort(p.begin(), p.end()); for (int i = 0; i &lt;= n - k; i++) { string window = s.substr(i, k); sort(window.begin(), window.end()); if (window == p) ans.push_back(i); } // Sort har window — O(k log k) per step Window fixed size hai — sliding window se O(1) per step mein frequency check hoga.
+
+▌ Teen Sawaal 1.
+Mover? tail — har position valid start 2.
+React kab? Scheduled — fixed size k, tail hamesha ek step 3.
+React kitna? if — exactly ek step, fixed size 
+▌ Dry Run s = &quot;cbaebabacd&quot;, p = &quot;abc&quot; → need={a:1,b:1,c:1}, required=3, k=3 tail=0, head=-1, formed=0 EXPAND k=3 chars: head=0 &quot;c&quot; → have={c:1}, c satisfy → formed=1 head=1 &quot;b&quot; → have={c:1,b:1}, b satisfy → formed=2 head=2 &quot;a&quot; → have={c:1,b:1,a:1}, a satisfy → formed=3 CHECK: formed==3==required → push tail=0 ✓ SHRINK: remove s[0]=&quot;c&quot; → have[c]=0 &lt; 1 → formed=2, tail=1 EXPAND: head=3 &quot;e&quot; → not in need → have={b:1,a:1,e:1}, formed=2 CHECK: formed=2 ≠ 3 → skip SHRINK: remove s[1]=&quot;b&quot; → have[b]=0 &lt; 1 → formed=1, tail=2 EXPAND: head=4 &quot;b&quot; → have[b]=1==need[b] → formed=2 CHECK: formed=2 ≠ 3 → skip SHRINK: remove s[2]=&quot;a&quot; → formed=1, tail=3 ...
+(similar) ...
+tail=6: window &quot;bac&quot; → have={b:1,a:1,c:1}, formed=3 → push 6 ✓ Output: [0, 6] 
+▌ C++ Code vector&lt;int&gt; findAnagrams(string s, string p) { int n = s.size(), k = p.size(); unordered_map&lt;char,int&gt; need, have; for (char c : p) need[c]++; int required = need.size(), formed = 0; int tail = 0, head = -1; vector&lt;int&gt; ans; while (tail &lt;= n - k) { while (head - tail + 1 &lt; k) { head++; have[s[head]]++; if (need.count(s[head]) &amp;&amp; have[s[head]] == need[s[head]]) formed++; } if (formed == required) ans.push_back(tail); if (tail &lt; head) { if (need.count(s[tail]) &amp;&amp; have[s[tail]] == need[s[tail]]) formed--; have[s[tail]]--; tail++; } else { tail++; head = tail - 1; } } return ans; } 
+▌ Complexity Time: O(n) — linear scan, O(1) per step Space: O(k) — freq maps mein at most k unique chars 
+▌ Edge Cases p.length &gt; s.length → return empty All same chars p=&quot;aaa&quot;, s=&quot;aaaa&quot; → [0,1] No anagram → return empty vector 
+▌ Pattern &amp; Crux Fixed-size frequency matching.
+formed/required trick: map comparison O(26) avoid karta hai — sirf ek counter track karo.
+Formed tab badhta hai jab exactly need[c] baar tha, tab nahi jab zyada tha.
+
+▌ Problem Connection LC 567 — bilkul same, sirf true/false return karo (early exit) LC 76 — same need/have/formed, variable size instead of fixed LC 30 — same frequency matching, word level instead of char level Problem 4 · LC 239 — Sliding Window Maximum [Hard] 
+▌ Problem Statement Array aur window size k diya hai.
+Har window ka maximum return karo jab window left se right slide kare.
+Input: nums=[1,3,-1,-3,5,3,6,7], k=3 Output: [3,3,5,5,6,7] 
+▌ Brute Force — O(nk) for (int i = 0; i &lt;= n - k; i++) { int maxVal = INT_MIN; for (int j = i; j &lt; i + k; j++) maxVal = max(maxVal, nums[j]); ans.push_back(maxVal); } // Har window mein max dhundna O(k) — total O(nk) Kya better hai? Jab window slide karta hai — ek element enter karta hai, ek exit karta hai.
+Sirf yeh do changes se max update hona chahiye — O(1) amortized.
+
+▌ Observation — Monotonic Deque Kyun? Deque mein indices store karte hain decreasing order of values mein.
+Invariant: front = current window ka max.
+Naya element aane pe back se chote elements hatao — woh kabhi max nahi ban sakte (naya element unse bada hai aur longer rahega).
+Front se hatao jab index window se bahar jaaye.
+
+▌ Teen Sawaal 1.
+Mover? tail — har position valid window start 2.
+React kab? Scheduled — fixed size k 3.
+React kitna? if — exactly ek element exit per step 
+▌ Dry Run nums=[1,3,-1,-3,5,3,6,7], k=3 tail=0, head=-1, dq=[] EXPAND to 3 elements: head=0: nums[0]=1 → dq=[] empty, push 0 → dq=[0] head=1: nums[1]=3 &gt; nums[0]=1 → pop 0, push 1 → dq=[1] head=2: nums[2]=-1 &lt; nums[1]=3 → push 2 → dq=[1,2] CHECK: ans.push(nums[dq.front()]) = nums[1] = 3 ✓ SHRINK: dq.front()=1 ≠ tail=0 → no pop; tail=1 EXPAND: head=3: nums[3]=-3 &lt; nums[2]=-1 → push 3 → dq=[1,2,3] CHECK: ans.push(nums[1]) = 3 ✓ SHRINK: dq.front()=1 == tail=1 → pop front → dq=[2,3]; tail=2 EXPAND: head=4: nums[4]=5 &gt; nums[3]=-3 pop, &gt; nums[2]=-1 pop → dq=[]; push 4 → dq=[4] CHECK: ans.push(nums[4]) = 5 ✓ SHRINK: dq.front()=4 ≠ tail=2 → no pop; tail=3 EXPAND: head=5: nums[5]=3 &lt; 5 → push 5 → dq=[4,5] CHECK: ans.push(nums[4]) = 5 ✓ SHRINK: dq.front()=4 ≠ 3 → tail=4 EXPAND: head=6: nums[6]=6 &gt; 3 pop, &gt; 5 pop → dq=[6] CHECK: ans.push(nums[6]) = 6 ✓; tail=5 EXPAND: head=7: nums[7]=7 &gt; 6 pop → dq=[7] CHECK: ans.push(nums[7]) = 7 ✓ Output: [3,3,5,5,6,7] ✓ 
+▌ C++ Code vector&lt;int&gt; maxSlidingWindow(vector&lt;int&gt;&amp; nums, int k) { deque&lt;int&gt; dq; int tail = 0, head = -1, n = nums.size(); vector&lt;int&gt; ans; while (tail &lt;= n - k) { while (head - tail + 1 &lt; k) { head++; while (!dq.empty() &amp;&amp; nums[dq.back()] &lt;= nums[head]) dq.pop_back(); dq.push_back(head); } ans.push_back(nums[dq.front()]); if (dq.front() == tail) dq.pop_front(); tail++; } return ans; } 
+▌ Complexity Time: O(n) — har element at most once deque mein aata, once jaata Space: O(k) — deque mein at most k indices 
+▌ Edge Cases k=1 → ans = nums itself k=n → ans has single element = max of entire array All same elements → deque always has one element Decreasing array [5,4,3,2] k=2 → deque always has 1 element (first of window) 
+▌ Pattern &amp; Crux Monotonic deque pattern.
+Jab bhi window mein O(1) max/min chahiye — yeh template.
+Deque mein sirf &quot;candidates&quot; hote hain — woh elements jo future mein max ban sakte hain.
+Dominated elements (chote elements jo ek bade ke baad aaye) kabhi max nahi ban sakte — inhe immediately hatao.
+
+▌ Problem Connection LC 1425 — same deque pattern, lekin DP transitions ke liye max dhundh rahe LC 862 Shortest Subarray with Sum &gt;= K — deque + prefix sum combination Problem 5 · LC 567 — Permutation in String [Medium] 
+▌ Problem Statement s1 aur s2 diye hain.
+True return karo agar s2 mein s1 ka koi permutation (anagram) exist karta hai.
+Input: s1=&quot;ab&quot;, s2=&quot;eidbaooo&quot; Output: true (s2 contains &quot;ba&quot;) 
+▌ Observation LC 438 ka hi problem hai — sirf first valid window milte hi true return karo (early exit).
+Fixed size window k = s1.length, same need/have/formed pattern.
+
+▌ Teen Sawaal 1.
+Mover? tail 2.
+React kab? Scheduled (fixed size) 3.
+React kitna? if 
+▌ Dry Run s1=&quot;ab&quot;, s2=&quot;eidbaooo&quot;, k=2, need={a:1,b:1} tail=0: EXPAND: &quot;e&quot;,&quot;i&quot; → have={e:1,i:1}, formed=0 ≠ 2 SHRINK: remove &quot;e&quot;, tail=1 tail=1: EXPAND: head=2 &quot;d&quot; → have={i:1,d:1}, formed=0 SHRINK: remove &quot;i&quot;, tail=2 tail=2: EXPAND: head=3 &quot;b&quot; → have={d:1,b:1}, formed=1 SHRINK: remove &quot;d&quot;, tail=3 tail=3: EXPAND: head=4 &quot;a&quot; → have={b:1,a:1}, formed=2 == required CHECK: return true ✓ 
+▌ C++ Code bool checkInclusion(string s1, string s2) { int k = s1.size(), n = s2.size(); if (k &gt; n) return false; unordered_map&lt;char,int&gt; need, have; for (char c : s1) need[c]++; int required = need.size(), formed = 0; int tail = 0, head = -1; while (tail &lt;= n - k) { while (head - tail + 1 &lt; k) { head++; have[s2[head]]++; if (need.count(s2[head]) &amp;&amp; have[s2[head]] == need[s2[head]]) formed++; } if (formed == required) return true; // early exit if (tail &lt; head) { if (need.count(s2[tail]) &amp;&amp; have[s2[tail]] == need[s2[tail]]) formed--; have[s2[tail]]--; tail++; } else { tail++; head = tail - 1; } } return false; } 
+▌ Complexity Time: O(n) best case early exit, O(n) worst Space: O(k) 
+▌ Edge Cases s1.length &gt; s2.length → false directly s1 == s2 → true s1 = &quot;a&quot;, s2 = &quot;a&quot; → true 
+▌ Problem Connection LC 438 — exact same, sirf all indices return karo instead of first Problem 6 · LC 992 — Subarrays with K Different Integers [Hard] 
+▌ Problem Statement Exactly k distinct integers wale subarrays ki count return karo.
+Input: nums=[1,2,1,2,3], k=2 Output: 7 
+▌ Brute Force — O(n²) for (int i = 0; i &lt; n; i++) { set&lt;int&gt; seen; for (int j = i; j &lt; n; j++) { seen.insert(nums[j]); if (seen.size() == k) count++; if (seen.size() &gt; k) break; } } 
+▌ Observation — atMost Trick Kyun? &quot;Exactly k&quot; directly sliding window mein fit nahi hota — window valid tab hai jab exactly k distinct hain, lekin ek element add karne se k+1 ho jaata hai (invalid), remove karne se k-1 (bhi invalid).
+Maintain karna mushkil hai.
+Lekin &quot;at most k&quot; easy hai — distinct &gt; k hone pe shrink karo.
+Aur: exactly(k) = atMost(k) - atMost(k-1) atMost(k) mein har valid window [tail..head] ke liye — saare subarrays ending at head jo tail ya uske baad start hote hain valid hain.
+Count = head - tail + 1.
+
+▌ Teen Sawaal — atMostK ke liye 1.
+Mover? tail 2.
+React kab? Invalid (distinct &gt; k) → REACT phir CHECK 3.
+React kitna? while — ek removal se distinct abhi bhi &gt; k ho sakta hai 
+▌ Dry Run — atMost(2) on [1,2,1,2,3] tail=0, head=-1, have={}, ans=0 head=0: add 1 → have={1:1}, size=1 &lt;= 2 → ans += 0-0+1 = 1 (subarray: [1]) head=1: add 2 → have={1:1,2:1}, size=2 → ans += 1-0+1 = 2 ([1,2],[2]) head=2: add 1 → have={1:2,2:1}, size=2 → ans += 2-0+1 = 3 ([1,2,1],[2,1],[1]) head=3: add 2 → have={1:2,2:2}, size=2 → ans += 3-0+1 = 4 (4 subarrays ending at 3) head=4: add 3 → have={1:2,2:2,3:1}, size=3 &gt; 2 → SHRINK: remove nums[0]=1 → have={1:1,2:2,3:1}, size=3 &gt; 2 → SHRINK: remove nums[1]=2 → have={1:1,2:1,3:1}, size=3 &gt; 2 → SHRINK: remove nums[2]=1 → have={2:1,3:1}, size=2 &lt;= 2, tail=3 ans += 4-3+1 = 2 ([2,3],[3]) atMost(2) = 1+2+3+4+2 = 12 atMost(1) similarly = 5 exactly(2) = 12 - 5 = 7 ✓ 
+▌ C++ Code int atMostK(vector&lt;int&gt;&amp; nums, int k) { unordered_map&lt;int,int&gt; have; int tail = 0, head = -1, ans = 0, n = nums.size(); while (tail &lt; n) { if (head + 1 &lt; n) { head++; have[nums[head]]++; } else break; while ((int)have.size() &gt; k) { have[nums[tail]]--; if (have[nums[tail]] == 0) have.erase(nums[tail]); tail++; } ans += head - tail + 1; } return ans; } int subarraysWithKDistinct(vector&lt;int&gt;&amp; nums, int k) { return atMostK(nums, k) - atMostK(nums, k - 1); } 
+▌ Complexity Time: O(n) — atMostK do baar call, dono linear Space: O(n) — freq map mein at most n elements 
+▌ Edge Cases k=0 → return 0 k &gt;= all distinct elements → all subarrays valid for atMost Single element array → 1 subarray 
+▌ Pattern &amp; Crux &quot;Exactly k&quot; → atMost(k) - atMost(k-1).
+Yeh trick tab use karo jab exactly maintain karna mushkil ho lekin at most easy ho.
+Count contribution = head - tail + 1 ek important pattern hai — saare subarrays ending at head jo tail se head tak start hote hain.
+
+▌ Problem Connection LC 2302 — same &quot;count subarrays&quot; idea, condition alag (score &lt; k) LC 2444 — same count idea, teen boundary pointers se Problem 7 · LC 1004 — Max Consecutive Ones III [Medium] 
+▌ Problem Statement Binary array aur integer k diya hai.
+At most k zeros flip karne ke baad maximum consecutive 1s ki length return karo.
+Input: nums=[1,1,1,0,0,0,1,1,1,1,0], k=2 Output: 6 
+▌ Observation Flip at most k zeros = window mein at most k zeros rakh sakte hain.
+Window invalid jab zeros &gt; k.
+Shrink until zeros &lt;= k.
+Longest valid window track karo.
+
+▌ Teen Sawaal 1.
+Mover? tail 2.
+React kab? Invalid (zeros &gt; k) → REACT phir CHECK 3.
+React kitna? if — ek element add kiya tha, ek remove kaafi 
+▌ Dry Run nums=[1,1,1,0,0,0,1,1,1,1,0], k=2 tail=0, head=-1, zeros=0, best=0 head=0:1→zeros=0, head=1:1→0, head=2:1→0, head=3:0→zeros=1 head=4:0→zeros=2, head=5:0→zeros=3 &gt; k=2 → SHRINK: nums[0]=1 → zeros stays 3, tail=1 zeros still 3 &gt; 2? NO (only if shrink) wait...
+if(zeros&gt;k): nums[tail]=nums[0]=1, not zero → zeros stays, tail=1 zeros=3&gt;2 → if again: nums[1]=1 → tail=2 zeros=3&gt;2 → if: nums[2]=1 → tail=3 zeros=3&gt;2 → if: nums[3]=0 → zeros=2, tail=4 zeros=2 not &gt;2 → stop CHECK: best = max(0, 5-4+1) = 2 head=6:1→zeros=2, best=max(2,6-4+1)=3 head=7:1→zeros=2, best=4 head=8:1→zeros=2, best=5 head=9:1→zeros=2, best=6 head=10:0→zeros=3&gt;2 → if: nums[4]=0→zeros=2, tail=5 CHECK: best=max(6,10-5+1)=6 Answer: 6 ✓ (window [4..9] = [0,1,1,1,1,0] with 2 zeros flipped) 
+▌ C++ Code int longestOnes(vector&lt;int&gt;&amp; nums, int k) { int tail = 0, head = -1, zeros = 0, best = 0, n = nums.size(); while (tail &lt; n) { if (head + 1 &lt; n) { head++; if (nums[head] == 0) zeros++; } else break; if (zeros &gt; k) { if (nums[tail] == 0) zeros--; tail++; } best = max(best, head - tail + 1); } return best; } 
+▌ Complexity Time: O(n) Space: O(1) 
+▌ Edge Cases k=0 → longest run of 1s without any flip k &gt;= total zeros → entire array All zeros → return k All ones → return n 
+▌ Pattern &amp; Crux &quot;At most k bad elements&quot; = simplest invalid pe react pattern.
+If shrink kyunki: exactly ek element add kiya tha (head), toh zeros at most 1 se badhe.
+Ek removal se zeros back to valid.
+
+▌ Problem Connection LC 424 — same &quot;at most k replacements&quot; idea, generalised to any char LC 3 — same structure, bad element = duplicate instead of zero Problem 8 · LC 424 — Longest Repeating Character Replacement [Medium] 
+▌ Problem Statement String s aur integer k diya hai.
+At most k characters replace karne ke baad sabse lamba substring jo same letter se bana ho uski length return karo.
+Input: s=&quot;AABABBA&quot;, k=1 Output: 4 
+▌ Observation Window of size L mein replacements needed = L - maxFreq (most frequent char ki count).
+Invalid jab replacements &gt; k, yani L - maxFreq &gt; k.
+Trick: maxFreq kabhi nahi ghata — running max rakhte hain.
+Kyun safe hai? Agar maxFreq stale-high hai, window check stricter hogi — window unnecessarily shrink nahi hogi lekin galat answer bhi nahi aayega.
+Window size monotonically increase ya same rehti hai.
+
+▌ Teen Sawaal 1.
+Mover? tail 2.
+React kab? Invalid (L - maxFreq &gt; k) → REACT phir CHECK 3.
+React kitna? if — ek step, kyunki ek element add kiya tha 
+▌ Dry Run s=&quot;AABABBA&quot;, k=1 tail=0, head=-1, have={}, maxFreq=0, best=0 head=0:&quot;A&quot;→have={A:1},maxFreq=1, L-maxFreq=1-1=0≤1 → best=1 head=1:&quot;A&quot;→have={A:2},maxFreq=2, 2-2=0≤1 → best=2 head=2:&quot;B&quot;→have={A:2,B:1},maxFreq=2, 3-2=1≤1 → best=3 head=3:&quot;A&quot;→have={A:3,B:1},maxFreq=3, 4-3=1≤1 → best=4 head=4:&quot;B&quot;→have={A:3,B:2},maxFreq=3, 5-3=2&gt;1 → SHRINK: remove s[0]=&quot;A&quot;→have={A:2,B:2},tail=1 L=4-3=1≤1 → best=max(4,4)=4 head=5:&quot;B&quot;→have={A:2,B:3},maxFreq=3, 5-3=2&gt;1 → SHRINK: remove s[1]=&quot;A&quot;→have={A:1,B:3},tail=2 L=4-3=1≤1 → best=4 head=6:&quot;A&quot;→have={A:2,B:3},maxFreq=3, 5-3=2&gt;1 → SHRINK: remove s[2]=&quot;B&quot;→have={A:2,B:2},tail=3 L=4-3=1≤1 → best=4 Answer: 4 ✓ (window &quot;AABA&quot; with 1 replacement → &quot;AAAA&quot;) 
+▌ C++ Code int characterReplacement(string s, int k) { unordered_map&lt;char,int&gt; have; int tail = 0, head = -1, maxFreq = 0, best = 0, n = s.size(); while (tail &lt; n) { if (head + 1 &lt; n) { head++; have[s[head]]++; maxFreq = max(maxFreq, have[s[head]]); } else break; if (head - tail + 1 - maxFreq &gt; k) { have[s[tail]]--; tail++; } best = max(best, head - tail + 1); } return best; } 
+▌ Complexity Time: O(n) Space: O(26) = O(1) — only uppercase letters 
+▌ Edge Cases k=0 → longest run of same character k &gt;= n → entire string (all chars can be replaced) All same chars → return n 
+▌ Pattern &amp; Crux Invalidity condition derived: L - maxFreq &gt; k.
+stale maxFreq trick makes window only grow or stay — never shrinks more than 1 step — O(n) guaranteed.
+This monotonic window size property is powerful.
+
+▌ Problem Connection LC 1004 — same &quot;at most k bad elements&quot; pattern, simpler condition LC 3 — same longest pattern, different invalidity Problem 9 · LC 30 — Substring with Concatenation of All Words [Hard] 
+▌ Problem Statement String s aur array words (sab same length x) diya hai.
+s mein woh starting indices return karo jahan se words ka koi permutation start hota hai.
+Input: s=&quot;barfoothefoobarman&quot;, words=[&quot;foo&quot;,&quot;bar&quot;] Output: [0, 9] 
+▌ Brute Force — O(n·k·x) for (int i = 0; i &lt;= n - D; i++) { map&lt;string,int&gt; seen; for (int j = 0; j &lt; k; j++) seen[s.substr(i + j*x, x)]++; if (seen == need) ans.push_back(i); } // Har position pe fresh O(k) check — O(nk) total 
+▌ Observation — Head Mover Kyun? Sirf x-aligned positions valid start hain.
+Offset 0 ke liye: 0,3,6,9...
+Offset 1: 1,4,7,10...
+Toh x independent passes karo.
+Har pass mein ek word slide karo — incremental update.
+Head mover kyunki: duplicate words → overuse → tail multiple steps; bad word → full reset → tail jumps.
+Yeh tail-driven mein cleanly fit nahi hota.
+
+▌ Teen Sawaal 1.
+Mover? head — sirf x-aligned positions meaningful 2.
+React kab? Invalid (overuse ya bad word) → REACT phir CHECK 3.
+React kitna? while — overuse mein multiple tail steps chahiye 
+▌ Dry Run — offset=0, s=&quot;barfoothefoobarman&quot;, words=[&quot;foo&quot;,&quot;bar&quot;] need={bar:1,foo:1}, k=2, x=3 tail=0, head=0, have={}, count=0 head=0: w=&quot;bar&quot; → have={bar:1},count=1 overuse? have[bar]=1==need[bar]=1 → NO count==2? NO head=3: w=&quot;foo&quot; → have={bar:1,foo:1},count=2 overuse? have[foo]=1==need[foo]=1 → NO count==2? YES → push tail=0 ✓ slide: remove &quot;bar&quot;→have={foo:1},count=1, tail=3 head=6: w=&quot;the&quot; → NOT in need → RESET have={}, count=0, tail=9 (=head=6+3) head=9: w=&quot;foo&quot; → have={foo:1},count=1 head=12: w=&quot;bar&quot; → have={foo:1,bar:1},count=2 count==2 → push tail=9 ✓ slide: remove &quot;foo&quot;→have={bar:1},count=1,tail=12 head=15: w=&quot;man&quot; → NOT in need → RESET, tail=18 head+x=18 &gt; n=19? NO; head=18&gt;n-x=16 → loop ends Output for offset=0: [0, 9] ✓ 
+▌ C++ Code vector&lt;int&gt; findSubstring(string s, vector&lt;string&gt;&amp; words) { int n=s.size(), x=words[0].size(), k=words.size(); unordered_map&lt;string,int&gt; need; for (auto&amp; w : words) need[w]++; vector&lt;int&gt; ans; for (int offset = 0; offset &lt; x; offset++) { unordered_map&lt;string,int&gt; have; int count=0, tail=offset, head=offset; while (head + x &lt;= n) { string w = s.substr(head, x); head += x; if (!need.count(w)) { have.clear(); count=0; tail=head; continue; } have[w]++; count++; while (have[w] &gt; need[w]) { string rem=s.substr(tail,x); have[rem]--; count--; tail+=x; } if (count == k) { ans.push_back(tail); string rem=s.substr(tail,x); have[rem]--; count--; tail+=x; } } } return ans; } 
+▌ Complexity Time: O(n·x) — x passes, each O(n/x) words × x chars = O(n) Space: O(k·x) — freq maps store word strings 
+▌ Edge Cases Duplicate words in words array → need[&quot;good&quot;]=2, count track karo not formed words.length = 1 → single word search x * k &gt; n → no valid window possible Bad word exists in s → full reset, continue 
+▌ Pattern &amp; Crux count==k use karo, formed==required nahi — kyunki duplicate words ke saath formed unique words count karta hai jo k se kam hoga.
+count total words count karta hai.
+have map overuse prevent karta hai.
+
+▌ Problem Connection LC 438 — same freq matching, char level instead of word level LC 76 — same need/have pattern, variable window instead of word-aligned fixed Problem 10 · LC 2009 — Minimum Number of Operations to Make Array Continuous [Hard] 
+▌ Problem Statement Array nums diya hai.
+Minimum operations return karo jisse array continuous bane.
+Continuous = sab distinct elements aur max - min = n-1.
+Input: nums=[4,2,5,3] Output: 0 (already [2,3,4,5]) Input: nums=[1,2,3,5,6] Output: 1 (change 1 → 4 → [2,3,4,5,6]) 
+▌ Observation Final array mein n distinct consecutive integers hone chahiye.
+Jo elements already range [X, X+n-1] mein hain unhe rakhenge — baaki replace karne padenge.
+Toh maximize karo kitne elements range mein fit ho sakte hain — minimum replacements = n - max_fit.
+Preprocessing: sort + dedup karo.
+Phir sliding window se dhundho ki window [nums[i], nums[i]+n-1] mein kitne elements hain (window valid = nums[head] - nums[tail] &lt; n).
+
+▌ Teen Sawaal 1.
+Mover? tail — har sorted position ek potential range start hai 2.
+React kab? Valid (range valid) → CHECK phir REACT 3.
+React kitna? if — tail 1 step, head expands from there 
+▌ Dry Run nums=[1,2,3,5,6] → sorted+dedup=[1,2,3,5,6], n=5 tail=0, head=-1, best=0 tail=0: nums[0]=1, range=[1,5] EXPAND: nums[1]=2 &lt; 1+5=6 → head=1 nums[2]=3 &lt; 6 → head=2 nums[3]=5 &lt; 6 → head=3 nums[4]=6 &gt;= 6 → STOP CHECK: best=max(0, 3-0+1)=4 tail=1 tail=1: nums[1]=2, range=[2,6] EXPAND: nums[4]=6 &lt; 2+5=7 → head=4 CHECK: best=max(4, 4-1+1)=4 tail=2 ...
+(similar) best=4 → answer = n - best = 5 - 4 = 1 ✓ 
+▌ C++ Code int minOperations(vector&lt;int&gt;&amp; nums) { int n = nums.size(); sort(nums.begin(), nums.end()); nums.erase(unique(nums.begin(), nums.end()), nums.end()); int m = nums.size(), tail = 0, head = -1, best = 0; while (tail &lt; m) { while (head + 1 &lt; m &amp;&amp; nums[head + 1] - nums[tail] &lt; n) head++; best = max(best, head - tail + 1); tail++; } return n - best; } 
+▌ Complexity Time: O(n log n) — sort dominates Space: O(1) extra (in-place sort) 
+▌ Edge Cases Already continuous → return 0 All same elements → need n-1 operations n=1 → always continuous → 0 
+▌ Pattern &amp; Crux Sort + dedup preprocessing converts hard problem into standard sliding window.
+Insight: valid range window = nums[head] - nums[tail] &lt; n.
+Count mein already distinct elements hain (dedup ke baad), toh head - tail + 1 = elements in range.
+
+▌ Problem Connection LC 2461 — same &quot;find best window&quot; idea, different validity condition Problem 11 · LC 1425 — Constrained Subsequence Sum [Hard] 
+▌ Problem Statement Non-empty subsequence ka maximum sum return karo jisme consecutive pair (i, j) ke liye j - i &lt;= k ho.
+Input: nums=[10,2,-10,5,20], k=2 Output: 37 (10+2+5+20) 
+▌ Observation — DP + Sliding Window dp[i] = maximum sum ending at index i.
+dp[i] = nums[i] + max(0, max(dp[i-k], ..., dp[i-1])).
+max(0, ...) isliye kyunki subsequence lena optional hai.
+Window max of last k dp values chahiye → monotonic deque.
+
+▌ Teen Sawaal 1.
+Mover? i (head) — each index process karo 2.
+React kab? Scheduled — window size k fixed 3.
+React kitna? if — front pop when too old (index &lt; i-k) 
+▌ Dry Run nums=[10,2,-10,5,20], k=2 dp=[], dq=[], ans=INT_MIN i=0: dq empty → dp[0]=10+0=10, ans=10 dq=[0] (dp[0]=10) i=1: front=0 &gt;= 1-2=-1 → ok dp[1]=2+max(0,dp[0])=2+10=12, ans=12 dp[1]=12 &gt; dp[0]=10 → pop 0, push 1 → dq=[1] i=2: front=1 &gt;= 2-2=0 → ok dp[2]=-10+max(0,dp[1])=-10+12=2, ans=12 dp[2]=2 &lt; dp[1]=12 → push 2 → dq=[1,2] i=3: front=1 &gt;= 3-2=1 → ok dp[3]=5+max(0,dp[1])=5+12=17, ans=17 dp[3]=17 &gt; dp[2]=2 → pop 2; &gt; dp[1]=12 → pop 1; dq=[3] i=4: front=3 &gt;= 4-2=2 → ok dp[4]=20+max(0,dp[3])=20+17=37, ans=37 dp[4]=37 &gt; dp[3] → pop 3, push 4 → dq=[4] Answer: 37 ✓ 
+▌ C++ Code int constrainedSubsetSum(vector&lt;int&gt;&amp; nums, int k) { int n = nums.size(); vector&lt;int&gt; dp(n); deque&lt;int&gt; dq; int ans = INT_MIN; for (int i = 0; i &lt; n; i++) { if (!dq.empty() &amp;&amp; dq.front() &lt; i - k) dq.pop_front(); dp[i] = nums[i] + (dq.empty() ? 0 : max(0, dp[dq.front()])); ans = max(ans, dp[i]); while (!dq.empty() &amp;&amp; dp[dq.back()] &lt;= dp[i]) dq.pop_back(); dq.push_back(i); } return ans; } 
+▌ Complexity Time: O(n) — each element once in deque Space: O(n) — dp array + O(k) deque 
+▌ Edge Cases All negative → maximum single negative element k &gt;= n → any element can connect to any other k=1 → only adjacent elements can be consecutive 
+▌ Pattern &amp; Crux DP + monotonic deque combination.
+Pattern: jab bhi DP recurrence mein window max/min chahiye — deque use karo.
+dp[i] = f(nums[i], window_max(dp[i-k..i-1])).
+max(0, ...) optional subsequence start allow karta hai.
+
+▌ Problem Connection LC 239 — same monotonic deque, direct array max instead of DP LC 862 — deque + prefix sum for different constraint Problem 12 · LC 2444 — Count Subarrays with Fixed Bounds [Hard] 
+▌ Problem Statement Return karo count of subarrays jahan min == minK aur max == maxK.
+Input: nums=[1,3,5,2,7,5], minK=1, maxK=5 Output: 2 
+▌ Observation Valid subarray conditions: (1) contain at least one minK, (2) contain at least one maxK, (3) koi bhi element [minK,maxK] ke bahar na ho.
+Teen pointers track karo: bad = last index jahan element out of bounds tha; lastMin = last index jahan nums[i]==minK; lastMax = last index jahan nums[i]==maxK.
+Head i pe ending subarrays jo valid hain: woh start karte hain (bad+1) se (min(lastMin,lastMax)) tak.
+Count = max(0, min(lastMin,lastMax) - bad).
+
+▌ Teen Sawaal 1.
+Mover? head (i) — har index process karo 2.
+React kab? invalid element pe bad pointer update → then CHECK 3.
+React kitna? if — bad sirf current index pe set hota hai, O(1) 
+▌ Dry Run nums=[1,3,5,2,7,5], minK=1, maxK=5 bad=-1, lastMin=-1, lastMax=-1, ans=0 i=0: nums[0]=1, in [1,5] → bad stays -1 nums[0]=1=minK → lastMin=0 validStart=min(0,-1)=-1, -1 &gt; -1? NO → ans+=0 i=1: nums[1]=3, in [1,5] validStart=min(0,-1)=-1 → ans+=0 i=2: nums[2]=5, in [1,5] nums[2]=5=maxK → lastMax=2 validStart=min(0,2)=0, 0&gt;-1 → ans+=0-(-1)=1 ✓ ([1,3,5]) i=3: nums[3]=2, in [1,5] validStart=min(0,2)=0, 0&gt;-1 → ans+=0-(-1)=1 ✓ ([1,3,5,2]) total ans=2 i=4: nums[4]=7, OUT of [1,5] → bad=4 validStart=min(0,2)=0, 0&gt;4? NO → ans+=0 i=5: nums[5]=5, in [1,5] nums[5]=5=maxK → lastMax=5 validStart=min(0,5)=0, 0&gt;4? NO → ans+=0 Final ans=2 ✓ 
+▌ C++ Code long long countSubarrays(vector&lt;int&gt;&amp; nums, int minK, int maxK) { long long ans = 0; int bad = -1, lastMin = -1, lastMax = -1, n = nums.size(); for (int i = 0; i &lt; n; i++) { if (nums[i] &lt; minK || nums[i] &gt; maxK) bad = i; if (nums[i] == minK) lastMin = i; if (nums[i] == maxK) lastMax = i; int validStart = min(lastMin, lastMax); if (validStart &gt; bad) ans += validStart - bad; } return ans; } 
+▌ Complexity Time: O(n) — single pass Space: O(1) — sirf teen pointers 
+▌ Edge Cases minK == maxK → element must equal that value Out of bounds element early → bad resets, count drops to 0 No valid subarray → return 0 
+▌ Pattern &amp; Crux Teen boundary pointers — explicit window shrink nahi, math se count karo.
+Valid start positions = (bad, min(lastMin,lastMax)] — count = min(lastMin,lastMax) - bad when positive.
+Yeh pattern tab aata hai jab multiple simultaneous constraints track karne hain.
+
+▌ Problem Connection LC 992 — same &quot;count valid subarrays&quot; idea, different method LC 2302 — same counting pattern, score condition se Problem 13 · LC 2302 — Count Subarrays with Score Less Than K [Hard] 
+▌ Problem Statement Score of a subarray = sum * length.
+Count subarrays with score strictly less than k.
+Input: nums=[2,1,4,3,5], k=10 Output: 6 
+▌ Observation Window invalid jab sum * length &gt;= k.
+Jaise hi invalid hua — shrink from left.
+Har valid window [tail..head] ke liye: (head - tail + 1) subarrays add hote hain (woh saare subarrays ending at head starting at tail, tail+1, ..., head).
+
+▌ Teen Sawaal 1.
+Mover? tail 2.
+React kab? Invalid (score &gt;= k) → REACT phir CHECK 3.
+React kitna? while — ek removal ke baad bhi score &gt;= k ho sakta hai 
+▌ Dry Run nums=[2,1,4,3,5], k=10 tail=0, head=-1, sum=0, ans=0 head=0: sum=2, score=2*1=2&lt;10 → ans+=0-0+1=1 ([2]) head=1: sum=3, score=3*2=6&lt;10 → ans+=1-0+1=2 ([2,1],[1]) head=2: sum=7, score=7*3=21&gt;=10 → SHRINK: remove 2 → sum=5, score=5*2=10&gt;=10 → SHRINK: remove 1 → sum=4, score=4*1=4&lt;10, tail=2 ans += 2-2+1=1 ([4]) head=3: sum=7, score=7*2=14&gt;=10 → SHRINK: remove 4 → sum=3, score=3*1=3&lt;10, tail=3 ans += 3-3+1=1 ([3]) head=4: sum=8, score=8*2=16&gt;=10 → SHRINK: remove 3 → sum=5, score=5*1=5&lt;10, tail=4 ans += 4-4+1=1 ([5]) Total ans=1+2+1+1+1=6 ✓ 
+▌ C++ Code long long countSubarrays(vector&lt;int&gt;&amp; nums, long long k) { int n = nums.size(), tail = 0, head = -1; long long sum = 0, ans = 0; while (tail &lt; n) { if (head + 1 &lt; n) { head++; sum += nums[head]; } else break; while (sum * (head - tail + 1) &gt;= k) { sum -= nums[tail]; tail++; } ans += head - tail + 1; } return ans; } 
+▌ Complexity Time: O(n) Space: O(1) 
+▌ Edge Cases Single large element &gt; k → score = element*1 &gt;= k, no subarray counted k=1 → no subarray valid (all scores &gt;= 1) All zeros → score=0 &lt; k → all subarrays valid 
+▌ Pattern &amp; Crux Composite invalidity condition.
+score = sum * length — dono cheezein change hoti hain jab shrink karte hain (sum ghata, length bhi ghata).
+Isliye while loop — ek step se guarantee nahi ki valid ho jaayega.
+ans += head - tail + 1 standard count trick.
+
+▌ Problem Connection LC 992 — same counting approach, different condition LC 2444 — same counting idea, different method (3 pointers) Problem 14 · LC 2461 — Maximum Sum of Distinct Subarrays with Length K [Medium] 
+▌ Problem Statement Length exactly k ke saare distinct element subarrays mein maximum sum return karo.
+Koi valid nahi toh 0 return karo.
+Input: nums=[1,5,4,2,9,9,9], k=3 Output: 15 ([4,2,9]) 
+▌ Observation Fixed window size k.
+Distinctness check: have.size() == k (kyunki k elements hain aur sab distinct toh map size = k).
+Running sum maintain karo O(k) recomputation avoid karne ke liye.
+
+▌ Teen Sawaal 1.
+Mover? tail — har position valid start 2.
+React kab? Scheduled (fixed size k) 3.
+React kitna? if — always 1 step 
+▌ Dry Run nums=[1,5,4,2,9,9,9], k=3 tail=0, head=-1, have={}, curr=0, best=0 EXPAND to 3: &quot;1&quot;,&quot;5&quot;,&quot;4&quot; → have={1:1,5:1,4:1}, curr=10 CHECK: have.size()=3==k → best=10 SHRINK: curr-=1→9, have[1]--→0→erase, tail=1 EXPAND: head=3 &quot;2&quot; → have={5:1,4:1,2:1}, curr=11 CHECK: have.size()=3==k → best=11 SHRINK: curr-=5→6, have[5]→erase, tail=2 EXPAND: head=4 &quot;9&quot; → have={4:1,2:1,9:1}, curr=15 CHECK: have.size()=3==k → best=15 SHRINK: curr-=4→11, have[4]→erase, tail=3 EXPAND: head=5 &quot;9&quot; → have={2:1,9:2}, curr=20 CHECK: have.size()=2 ≠ 3 → no update SHRINK: curr-=2→18, have[2]→erase, tail=4 EXPAND: head=6 &quot;9&quot; → have={9:3}, curr=27 CHECK: have.size()=1 ≠ 3 → no update SHRINK: curr-=9→18, have[9]--=2, tail=5 Answer: 15 ✓ 
+▌ C++ Code long long maximumSubarraySum(vector&lt;int&gt;&amp; nums, int k) { unordered_map&lt;int,int&gt; have; int tail = 0, head = -1, n = nums.size(); long long curr = 0, best = 0; while (tail &lt;= n - k) { while (head - tail + 1 &lt; k) { head++; have[nums[head]]++; curr += nums[head]; } if ((int)have.size() == k) best = max(best, curr); curr -= nums[tail]; have[nums[tail]]--; if (have[nums[tail]] == 0) have.erase(nums[tail]); tail++; } return best; } 
+▌ Complexity Time: O(n) Space: O(k) — freq map mein at most k unique elements 
+▌ Edge Cases k &gt; n → return 0 All same elements → no valid window → return 0 k=1 → max element 
+▌ Pattern &amp; Crux have.size()==k trick sirf fixed window mein kaam karta hai — kyunki tab window mein exactly k elements hain aur agar sab distinct hain toh map size exactly k hogi.
+Running sum: curr ek variable mein update karo instead of recalculating O(k) per step.
+
+▌ Problem Connection LC 438 — same fixed window, frequency matching instead of distinctness LC 239 — same fixed window scan, max value track karo instead of sum 
+Part 3 — Quick Reference 3.1 Teen Sawaal — Cheat Sheet Q1: Mover kaun hai? Har position meaningful (char-by-char) → tail mover Sirf kuch positions (chunked/word-level) → head mover Head mover signals: - Words/chunks of same size - Duplicates possible → overuse → multi-step tail - Invalid element → full reset → tail jumps Q2: Reactor kab react karta hai? Window valid hone pe → EXPAND → CHECK → REACT Window invalid hone pe → EXPAND → REACT → CHECK Fixed size → EXPAND → CHECK → REACT (scheduled) Q3: Reactor kitna react karta hai? 1 step se fix hoti hai → if Unknown steps → while 3.2 Keywords → Template Map Problem Statement Keywords Template &quot;longest substring/subarray with...&quot; Valid pe react, check→react &quot;shortest window containing all...&quot; Valid pe react, check→react, while &quot;all anagrams / permutations&quot; Scheduled, fixed size, if &quot;exactly k distinct&quot; atMost(k) - atMost(k-1) &quot;at most k distinct/bad&quot; Invalid pe react, while &quot;count subarrays with condition&quot; Invalid pe react, ans += head-tail+1 &quot;words of same length, concat&quot; Head mover, x passes, while overuse &quot;replace at most k&quot; Invalid pe react, if (1 step) &quot;maximum of each window of size k&quot; Scheduled, monotonic deque &quot;make array continuous/sorted&quot; Sort+dedup, then valid pe react 3.3 Sliding Window vs Two Pointer Criterion Sliding Window Two Pointer Direction Dono same direction (L→R) Opposite ends ya independent What tracked Contiguous window [tail..head] Pair/triplet, no window Array sorted? Not needed Usually sorted (opposite ends) Examples LC 3,76,438,239,30 LC 167,11,15, Floyd cycle 3.4 DS Selection Guide Zarurat DS Problems Char frequency tracking unordered_map&lt;char,int&gt; LC 76, 438, 567, 424 Element frequency unordered_map&lt;int,int&gt; LC 992, 2461, 30 Presence only unordered_set&lt;char&gt; LC 3 Window max/min O(1) deque&lt;int&gt; (monotonic) LC 239, 1425 Distinct count have.size() LC 992, 2461 Running sum long long sum LC 2302, 2461 Three boundaries int bad, lastMin, lastMax LC 2444 DP + window max dp[] + deque&lt;int&gt; LC 1425 3.5 Common Bugs — Fix Guide Bug Wajah Fix substr(pos, end) — Java style C++ mein 2nd arg = LENGTH substr(pos, LENGTH) formed++ on overuse formed sirf exact count pe badhna chahiye if(have[c]==need[c]) formed++ head = tail not tail-1 Next head++ se skip hoga head = tail-1 tail++ phir ds.remove(s[tail]) Wrong element remove hoga ds.remove(s[tail]) THEN tail++ count vs formed (LC 30) Duplicate words mein formed under-counts count==k use karo No map clear on bad word Stale data valid windows miss karta hai have.clear(); count=0; tail=head while vs if shrink 1 step se fix nahi hua Check: fixed size? → if; else → while 3.6 Problem Connection Map LC 438 (All Anagrams) └─► LC 567 (Permutation) — same code, early exit true/false └─► LC 76 (Min Window) — same need/have/formed, variable size └─► LC 30 (Word Concat) — same freq match, word-level not char-level LC 3 (Longest No Repeat) └─► LC 1004 (Max Ones) — same &quot;longest with budget k&quot; pattern └─► LC 424 (Char Replace) — same &quot;longest&quot; idea, derived condition LC 239 (Window Max) └─► LC 1425 (Constrained Sum) — same deque, DP transitions pe LC 992 (K Different) └─► LC 2302 (Score &lt; K) — same count subarrays ending at head └─► LC 2444 (Fixed Bounds) — same counting, 3 pointers method LC 76 is the &quot;parent&quot; of shortest-window problems.
+LC 438 is the &quot;parent&quot; of fixed-window freq matching.
+LC 239 is the &quot;parent&quot; of window extrema problems.
+3.7 Complexity Summary Problem Time Space Note LC 76 Min Window O(|s|+|t|) O(|t|) Each char 2x processed LC 3 No Repeat O(n) O(charset) Linear LC 438 Anagrams O(n) O(k) formed trick O(1) check LC 567 Permutation O(n) O(k) Early exit possible LC 239 Window Max O(n) O(k) Deque amortized O(1) LC 992 K Different O(n) O(n) atMost called twice LC 1004 Max Ones O(n) O(1) Just a counter LC 424 Char Replace O(n) O(26)=O(1) stale maxFreq trick LC 30 Word Concat O(n·x) O(k·x) x passes of O(n/x) each LC 2009 Min Ops O(n log n) O(1) Sort dominates LC 1425 Constrained O(n) O(n) dp array + deque LC 2444 Fixed Bounds O(n) O(1) Single pass, 3 pointers LC 2302 Score &lt; K O(n) O(1) Sum variable only LC 2461 Distinct Sum O(n) O(k) Running sum + map 
